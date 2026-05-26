@@ -1,73 +1,118 @@
 # MotoMatch
 
-Webapp estatica para ayudar a una persona a elegir la motocicleta mas polivalente segun estatura, uso principal, body type, tipo de motor y filtros comparables.
+Webapp estatica para recomendar motos con datos reales desde Supabase.
 
-## Uso
+## Supabase
 
-Abre `index.html` en el navegador. La app carga datos demo si no hay Supabase configurado.
+La tabla principal es `motos`. La app tambien lee estas tablas:
 
-## Conectar Supabase
+- `body`
+- `body_wizard`
+- `profile_body_types`
+- `engine`
+- `riding_position`
+- `transmission`
+- `cooling`
 
-Hay dos caminos.
+Las relaciones logicas se cruzan por `slug`, no por `id`.
 
-### Opcion rapida desde la app
+### Policies de lectura
 
-Pulsa el boton de ajustes de la esquina superior derecha e introduce:
+Con la publishable/anon key, el frontend solo vera filas si Supabase permite `select`.
 
-- Supabase URL
-- Anon public key
-- Nombre de tabla, por defecto `motorcycles`
+Para una app publica de solo lectura puedes usar:
 
-La configuracion se guarda en `localStorage`.
+```sql
+alter table public.motos enable row level security;
+alter table public.body enable row level security;
+alter table public.body_wizard enable row level security;
+alter table public.profile_body_types enable row level security;
+alter table public.engine enable row level security;
+alter table public.riding_position enable row level security;
+alter table public.transmission enable row level security;
+alter table public.cooling enable row level security;
 
-### Opcion recomendada para desarrollo local
+create policy "Public read motos" on public.motos for select using (true);
+create policy "Public read body" on public.body for select using (true);
+create policy "Public read body_wizard" on public.body_wizard for select using (true);
+create policy "Public read profile_body_types" on public.profile_body_types for select using (true);
+create policy "Public read engine" on public.engine for select using (true);
+create policy "Public read riding_position" on public.riding_position for select using (true);
+create policy "Public read transmission" on public.transmission for select using (true);
+create policy "Public read cooling" on public.cooling for select using (true);
+```
 
-Copia `config.example.js` como `config.local.js` y rellena tus datos:
+Si ya existen policies con esos nombres, edita las existentes o usa nombres distintos.
+
+## Configuracion local
+
+Para GitHub Pages existe `config.js`, que se sube al repo y contiene la publishable key de Supabase.
+
+Para desarrollo local, puedes copiar `config.example.js` como `config.local.js` y sobreescribir la configuracion:
 
 ```js
 window.MOTOMATCH_SUPABASE = {
   url: "https://TU-PROYECTO.supabase.co",
   key: "TU_ANON_PUBLIC_KEY",
-  table: "motorcycles"
+  table: "motos"
 };
 ```
 
-`config.local.js` esta ignorado por git para no subir tus datos locales por accidente.
+`config.local.js` esta ignorado por git.
 
-La anon public key de Supabase esta pensada para usarse en cliente, pero las reglas importantes deben estar en Supabase con RLS y policies. Si publicas la app, asume que cualquier usuario podra ver esa anon key.
+El orden de carga es:
 
-## Tabla recomendada
+1. `config.js`: configuracion publica para produccion/GitHub Pages.
+2. `config.local.js`: override local ignorado por git, si existe.
+3. `app.js`: arranca la app leyendo `window.MOTOMATCH_SUPABASE`.
 
-La app lee hasta 300 filas de la tabla configurada. Campos recomendados:
+## Wizard
 
-| Campo | Tipo sugerido | Ejemplo |
-| --- | --- | --- |
-| `brand` | text | `Yamaha` |
-| `model` | text | `Tracer 7` |
-| `body_type` | text | `trail`, `naked`, `sport_touring`, `custom`, `scooter` |
-| `engine_type` | text | `single`, `parallel_twin`, `v_twin`, `triple`, `inline_four`, `electric` |
-| `displacement_cc` | integer | `689` |
-| `seat_height_mm` | integer | `835` |
-| `weight_kg` | integer | `197` |
-| `power_hp` | integer | `73` |
-| `price_eur` | integer | `9299` |
-| `image_urls` | text[] o json/text | URLs de fotos |
-| `use_scores` | jsonb | `{"commute":78,"touring":88,"mixed":91,"offroad":36,"sport":82,"beginner":66,"value":84}` |
-| `pros` | text[] o text con `|` | `Motor elastico|Buena para diario` |
-| `cons` | text[] o text con `|` | `Pista limitada|Asiento alto` |
+El flujo actual:
 
-Tambien acepta alias comunes como `photos`, `images`, `photo_urls`, `cc`, `cilindrada`, `seat_height`, `hp`, `price` y `scores`.
+1. Uso principal: ciudad, ruta, montana, viajes largos o mixto.
+2. Seleccion de tipos de moto desde `body`.
+3. Ajuste fisico: carnet, altura y tolerancia al peso.
+4. Preferencias: transmision, viento, consumo, pasajero/equipaje y caracter.
+5. Resultados rankeados y motos descartadas con motivo.
 
-## GitHub
+## Ranking
 
-El proyecto no tiene remoto configurado todavia. Cuando tengas el repositorio creado en GitHub:
+La app usa `weights_json` de `body_wizard`:
 
-```bash
-git remote add origin https://github.com/TU_USUARIO/TU_REPO.git
-git add .
-git commit -m "Initial MotoMatch webapp"
-git branch -M main
-git push -u origin main
+```js
+ranking_score =
+  route_power_score * weight.route_power_score +
+  wind_protection_score * weight.wind_protection_score +
+  city_score * weight.city_score +
+  polyvalence_score * weight.polyvalence_score +
+  mountain_score * weight.mountain_score +
+  long_touring_score * weight.long_touring_score +
+  urban_heat_score * weight.urban_heat_score +
+  urban_fatigue_score * weight.urban_fatigue_score +
+  lane_filtering_score * weight.lane_filtering_score
 ```
 
-Para GitHub Pages, puedes publicar la rama `main` desde Settings > Pages. Si quieres una configuracion fija en produccion, crea un `config.js` publico o pega las credenciales publicas en la pantalla de ajustes desde el navegador donde lo uses.
+Si un peso no existe, cuenta como 0. Despues se ajusta ligeramente por fit de altura, body type seleccionado y preferencias de consumo/viaje.
+
+## Normalizacion por slugs
+
+La tabla `motos` no necesita foreign keys. La app normaliza:
+
+- `segment` -> `body.slug`
+- `engine_config` -> `engine.slug`
+- `gearbox_type` -> `transmission.slug`
+- `cooling` -> `cooling.slug`
+- `riding_position` -> `riding_position.slug`
+
+Helpers principales en `app.js`:
+
+- `normalizeBodyFromSegment(segment)`
+- `normalizeEngine(engine_config)`
+- `normalizeTransmission(gearbox_type)`
+- `normalizeCooling(cooling)`
+- `normalizeRidingPosition(riding_position)`
+
+## GitHub Pages
+
+Si publicas la app como estatica, recuerda que cualquier clave puesta en cliente es visible. Usa una publishable/anon key y protege datos con RLS/policies de solo lectura.

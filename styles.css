@@ -139,7 +139,7 @@ dialog {
 .height-control {
   display: grid;
   gap: 18px;
-  align-self: center;
+  align-self: start;
   padding: 30px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -162,10 +162,16 @@ input[type="range"] {
 }
 
 .choice-grid,
-.body-type-grid {
+.body-type-grid,
+.form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
+}
+
+.form-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  align-items: start;
 }
 
 .choice-card,
@@ -213,6 +219,60 @@ input[type="range"] {
   padding: 0;
   list-style: none;
   font-size: 0.9rem;
+}
+
+.body-card-art {
+  min-height: 74px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #edf2ef;
+  color: var(--blue);
+  font-weight: 900;
+}
+
+.body-card-art svg {
+  max-width: 100%;
+  max-height: 82px;
+}
+
+.body-score-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.body-score-grid span {
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  border-radius: 6px;
+  background: var(--soft);
+  color: var(--ink);
+  font-weight: 850;
+}
+
+.body-score-grid b {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.recommended-chip {
+  display: inline-grid;
+  place-items: center;
+  min-height: 30px;
+  margin-top: 12px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(68, 117, 92, 0.12);
+  color: var(--green);
+  font-size: 0.78rem;
+  font-weight: 850;
 }
 
 .body-card li::before {
@@ -460,6 +520,18 @@ input[type="range"] {
   font-weight: 900;
 }
 
+.photo-fallback span {
+  max-width: 24ch;
+  padding: 18px;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.compact-photo {
+  grid-template-columns: 1fr;
+}
+
 .motorcycle-content {
   display: grid;
   gap: 14px;
@@ -494,6 +566,12 @@ input[type="range"] {
   font-size: 0.72rem;
   font-weight: 750;
   color: rgba(255, 255, 255, 0.72);
+}
+
+.reason {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.5;
 }
 
 .meta-line,
@@ -550,6 +628,54 @@ input[type="range"] {
   margin: 0;
   padding-left: 18px;
   color: var(--muted);
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.card-actions a {
+  color: var(--blue);
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.discarded-section {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.discarded-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.discarded-card {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+}
+
+.discarded-card strong {
+  color: var(--ink);
+}
+
+.discarded-card span,
+.discarded-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .empty-state {

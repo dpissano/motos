@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MotoMatch | Selector de motos polivalentes</title>
+    <title>MotoMatch | Recomendador de motos</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="app-shell">
       <section class="topbar" aria-label="Cabecera">
         <div>
-          <p class="eyebrow">Selector inteligente</p>
+          <p class="eyebrow">Recomendador con Supabase</p>
           <h1>MotoMatch</h1>
         </div>
         <button id="dataSettingsBtn" class="icon-button" type="button" aria-label="Configurar Supabase" title="Configurar Supabase">
@@ -18,66 +18,125 @@
         </button>
       </section>
 
-      <section class="wizard" aria-label="Wizard de recomendación">
+      <section class="wizard" aria-label="Wizard de recomendacion">
         <div class="wizard-progress">
-          <span class="progress-step is-active" data-progress-step="0">Altura</span>
-          <span class="progress-step" data-progress-step="1">Uso</span>
-          <span class="progress-step" data-progress-step="2">Carrocería</span>
-          <span class="progress-step" data-progress-step="3">Motor</span>
+          <span class="progress-step is-active" data-progress-step="0">Uso</span>
+          <span class="progress-step" data-progress-step="1">Tipos</span>
+          <span class="progress-step" data-progress-step="2">Ajuste</span>
+          <span class="progress-step" data-progress-step="3">Preferencias</span>
           <span class="progress-step" data-progress-step="4">Resultados</span>
         </div>
 
         <div class="wizard-panel" data-step="0">
           <div class="step-copy">
             <p class="eyebrow">Paso 1</p>
-            <h2>Tu estatura cambia mucho la moto ideal.</h2>
-            <p>La app estima si llegarás cómodo al suelo cruzando estatura, altura de asiento y peso.</p>
+            <h2>Define el uso principal.</h2>
+            <p>Esto selecciona un perfil de ranking desde <code>body_wizard</code> cuando existe, o pesos razonables si todavia no hay perfil equivalente.</p>
           </div>
-          <label class="height-control">
-            <span>Estatura</span>
-            <output id="heightOutput">175 cm</output>
-            <input id="heightInput" type="range" min="145" max="210" value="175" />
-          </label>
+          <div id="useOptions" class="choice-grid"></div>
         </div>
 
         <div class="wizard-panel" data-step="1" hidden>
           <div class="step-copy">
             <p class="eyebrow">Paso 2</p>
-            <h2>¿Para qué la vas a usar más?</h2>
-            <p>La polivalencia no significa lo mismo para ciudad, viajes, curvas, pistas o primera moto.</p>
+            <h2>Elige formatos de moto.</h2>
+            <p>Estos tipos vienen de la tabla <code>body</code>. La app usa <code>segment</code> de cada moto para cruzar por slug, no por id.</p>
           </div>
-          <div id="useOptions" class="choice-grid"></div>
+          <div id="bodyTypeOptions" class="body-type-grid"></div>
         </div>
 
         <div class="wizard-panel" data-step="2" hidden>
           <div class="step-copy">
             <p class="eyebrow">Paso 3</p>
-            <h2>Body types y sus compromisos.</h2>
-            <p>Elige uno o varios estilos. Te mostramos sus puntos fuertes y flojos para tu uso principal.</p>
+            <h2>Tu fisico y restricciones.</h2>
+            <p>Altura, carnet y peso permitido se aplican como filtros duros antes del ranking.</p>
           </div>
-          <div id="bodyTypeOptions" class="body-type-grid"></div>
+          <div class="form-grid">
+            <label class="height-control">
+              <span>Estatura</span>
+              <output id="heightOutput">175 cm</output>
+              <input id="heightInput" type="range" min="145" max="210" value="175" />
+            </label>
+            <label class="field">
+              <span>Carnet</span>
+              <select id="licenseSelect">
+                <option value="A1">A1</option>
+                <option value="A2" selected>A2</option>
+                <option value="A">A</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Peso maximo aceptable</span>
+              <select id="weightToleranceSelect">
+                <option value="light">Prefiero ligera</option>
+                <option value="medium" selected>Hasta medio peso</option>
+                <option value="heavy">Tolero peso alto</option>
+              </select>
+            </label>
+          </div>
         </div>
 
         <div class="wizard-panel" data-step="3" hidden>
           <div class="step-copy">
             <p class="eyebrow">Paso 4</p>
-            <h2>Tipo de motor.</h2>
-            <p>Prioriza tacto, consumo, potencia, mantenimiento o suavidad según tu forma de conducir.</p>
+            <h2>Preferencias de uso real.</h2>
+            <p>La transmision, proteccion, consumo, pasajero y caracter ajustan filtros y explicaciones.</p>
           </div>
-          <div id="engineOptions" class="choice-grid"></div>
+          <div class="form-grid">
+            <label class="field">
+              <span>Transmision</span>
+              <select id="transmissionPreferenceSelect">
+                <option value="any">Me da igual</option>
+                <option value="manual">Manual</option>
+                <option value="automatic">Automatica / DCT / CVT</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Proteccion contra viento</span>
+              <select id="windPreferenceSelect">
+                <option value="low">No es prioridad</option>
+                <option value="medium" selected>Algo de proteccion</option>
+                <option value="high">Muy importante</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Consumo</span>
+              <select id="consumptionPreferenceSelect">
+                <option value="low">No me preocupa</option>
+                <option value="medium" selected>Me importa</option>
+                <option value="high">Es clave</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Pasajero/equipaje</span>
+              <select id="passengerPreferenceSelect">
+                <option value="no">Casi nunca</option>
+                <option value="sometimes" selected>A veces</option>
+                <option value="often">Frecuente</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Caracter</span>
+              <select id="comfortSportSelect">
+                <option value="comfort">Comoda</option>
+                <option value="balanced" selected>Equilibrada</option>
+                <option value="sport">Deportiva</option>
+              </select>
+            </label>
+          </div>
         </div>
 
         <div class="wizard-panel results-intro" data-step="4" hidden>
           <div class="step-copy">
             <p class="eyebrow">Paso 5</p>
-            <h2>Tu shortlist está lista.</h2>
-            <p>Ordena por scoring, combina filtros y abre cada ficha para comparar fotos y argumentos.</p>
+            <h2>Ranking calculado.</h2>
+            <p>Se aplican filtros duros, se rankea por pesos del perfil y se muestran tambien descartes con motivo.</p>
           </div>
           <div class="summary-strip" id="wizardSummary"></div>
         </div>
 
         <div class="wizard-actions">
-          <button id="prevStepBtn" class="secondary" type="button">Atrás</button>
+          <button id="prevStepBtn" class="secondary" type="button">Atras</button>
           <button id="nextStepBtn" class="primary" type="button">Siguiente</button>
         </div>
       </section>
@@ -108,26 +167,12 @@
             <span class="filter-title">Cilindrada</span>
             <div class="range-grid">
               <label>
-                <span>Mín.</span>
+                <span>Min.</span>
                 <input id="minCcInput" type="number" min="0" step="50" placeholder="300" />
               </label>
               <label>
-                <span>Máx.</span>
+                <span>Max.</span>
                 <input id="maxCcInput" type="number" min="0" step="50" placeholder="1200" />
-              </label>
-            </div>
-          </div>
-
-          <div class="filter-block">
-            <span class="filter-title">Altura asiento</span>
-            <div class="range-grid">
-              <label>
-                <span>Mín.</span>
-                <input id="minSeatInput" type="number" min="0" step="5" placeholder="760" />
-              </label>
-              <label>
-                <span>Máx.</span>
-                <input id="maxSeatInput" type="number" min="0" step="5" placeholder="890" />
               </label>
             </div>
           </div>
@@ -146,13 +191,23 @@
         <section class="results-area">
           <div class="results-toolbar">
             <div>
-              <p class="eyebrow">Recomendaciones</p>
+              <p class="eyebrow">Top recomendadas</p>
               <h2 id="resultsCount">0 motos</h2>
             </div>
             <div id="activeFilters" class="active-filters" aria-live="polite"></div>
           </div>
           <div id="motorcycleList" class="motorcycle-list"></div>
           <p id="emptyState" class="empty-state" hidden>No hay motos que encajen con esos filtros.</p>
+
+          <div class="discarded-section">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Descartadas</p>
+                <h2 id="discardedCount">0 motos</h2>
+              </div>
+            </div>
+            <div id="discardedList" class="discarded-list"></div>
+          </div>
         </section>
       </section>
     </main>
@@ -162,22 +217,22 @@
         <div class="section-heading">
           <div>
             <p class="eyebrow">Datos</p>
-            <h2>Conexión Supabase</h2>
+            <h2>Conexion Supabase</h2>
           </div>
-          <button class="icon-button" value="close" type="submit" aria-label="Cerrar">×</button>
+          <button class="icon-button" value="close" type="submit" aria-label="Cerrar">x</button>
         </div>
-        <p class="muted">Guarda las credenciales públicas del proyecto. La tabla esperada se llama <code>motorcycles</code>, pero puedes cambiarla.</p>
+        <p class="muted">La tabla principal esperada es <code>motos</code>. Las tablas de taxonomia se cargan por nombre fijo.</p>
         <label class="field">
           <span>Supabase URL</span>
           <input id="supabaseUrlInput" type="url" placeholder="https://xxxx.supabase.co" />
         </label>
         <label class="field">
-          <span>Anon public key</span>
-          <input id="supabaseKeyInput" type="password" placeholder="eyJ..." />
+          <span>Publishable / anon key</span>
+          <input id="supabaseKeyInput" type="password" placeholder="sb_publishable_..." />
         </label>
         <label class="field">
-          <span>Tabla</span>
-          <input id="supabaseTableInput" type="text" value="motorcycles" />
+          <span>Tabla principal</span>
+          <input id="supabaseTableInput" type="text" value="motos" />
         </label>
         <div class="dialog-actions">
           <button id="useDemoDataBtn" class="secondary" type="button">Usar demo</button>
@@ -186,6 +241,7 @@
       </form>
     </dialog>
 
+    <script src="./config.js"></script>
     <script src="./config.local.js"></script>
     <script type="module" src="./app.js"></script>
   </body>
