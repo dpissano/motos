@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MotoMatch | Selector de motos polivalentes</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar" aria-label="Cabecera">
+        <div>
+          <p class="eyebrow">Selector inteligente</p>
+          <h1>MotoMatch</h1>
+        </div>
+        <button id="dataSettingsBtn" class="icon-button" type="button" aria-label="Configurar Supabase" title="Configurar Supabase">
+          <span aria-hidden="true">⚙</span>
+        </button>
+      </section>
+
+      <section class="wizard" aria-label="Wizard de recomendación">
+        <div class="wizard-progress">
+          <span class="progress-step is-active" data-progress-step="0">Altura</span>
+          <span class="progress-step" data-progress-step="1">Uso</span>
+          <span class="progress-step" data-progress-step="2">Carrocería</span>
+          <span class="progress-step" data-progress-step="3">Motor</span>
+          <span class="progress-step" data-progress-step="4">Resultados</span>
+        </div>
+
+        <div class="wizard-panel" data-step="0">
+          <div class="step-copy">
+            <p class="eyebrow">Paso 1</p>
+            <h2>Tu estatura cambia mucho la moto ideal.</h2>
+            <p>La app estima si llegarás cómodo al suelo cruzando estatura, altura de asiento y peso.</p>
+          </div>
+          <label class="height-control">
+            <span>Estatura</span>
+            <output id="heightOutput">175 cm</output>
+            <input id="heightInput" type="range" min="145" max="210" value="175" />
+          </label>
+        </div>
+
+        <div class="wizard-panel" data-step="1" hidden>
+          <div class="step-copy">
+            <p class="eyebrow">Paso 2</p>
+            <h2>¿Para qué la vas a usar más?</h2>
+            <p>La polivalencia no significa lo mismo para ciudad, viajes, curvas, pistas o primera moto.</p>
+          </div>
+          <div id="useOptions" class="choice-grid"></div>
+        </div>
+
+        <div class="wizard-panel" data-step="2" hidden>
+          <div class="step-copy">
+            <p class="eyebrow">Paso 3</p>
+            <h2>Body types y sus compromisos.</h2>
+            <p>Elige uno o varios estilos. Te mostramos sus puntos fuertes y flojos para tu uso principal.</p>
+          </div>
+          <div id="bodyTypeOptions" class="body-type-grid"></div>
+        </div>
+
+        <div class="wizard-panel" data-step="3" hidden>
+          <div class="step-copy">
+            <p class="eyebrow">Paso 4</p>
+            <h2>Tipo de motor.</h2>
+            <p>Prioriza tacto, consumo, potencia, mantenimiento o suavidad según tu forma de conducir.</p>
+          </div>
+          <div id="engineOptions" class="choice-grid"></div>
+        </div>
+
+        <div class="wizard-panel results-intro" data-step="4" hidden>
+          <div class="step-copy">
+            <p class="eyebrow">Paso 5</p>
+            <h2>Tu shortlist está lista.</h2>
+            <p>Ordena por scoring, combina filtros y abre cada ficha para comparar fotos y argumentos.</p>
+          </div>
+          <div class="summary-strip" id="wizardSummary"></div>
+        </div>
+
+        <div class="wizard-actions">
+          <button id="prevStepBtn" class="secondary" type="button">Atrás</button>
+          <button id="nextStepBtn" class="primary" type="button">Siguiente</button>
+        </div>
+      </section>
+
+      <section class="results-shell" aria-label="Resultados">
+        <aside class="filters" aria-label="Filtros">
+          <div class="section-heading">
+            <p class="eyebrow">Filtros</p>
+            <button id="clearFiltersBtn" class="text-button" type="button">Limpiar</button>
+          </div>
+
+          <label class="field">
+            <span>Buscar</span>
+            <input id="searchInput" type="search" placeholder="Marca, modelo o rasgo" />
+          </label>
+
+          <label class="field">
+            <span>Ordenar por</span>
+            <select id="sortSelect"></select>
+          </label>
+
+          <div class="filter-block">
+            <span class="filter-title">Marcas</span>
+            <div id="brandFilters" class="check-list"></div>
+          </div>
+
+          <div class="filter-block">
+            <span class="filter-title">Cilindrada</span>
+            <div class="range-grid">
+              <label>
+                <span>Mín.</span>
+                <input id="minCcInput" type="number" min="0" step="50" placeholder="300" />
+              </label>
+              <label>
+                <span>Máx.</span>
+                <input id="maxCcInput" type="number" min="0" step="50" placeholder="1200" />
+              </label>
+            </div>
+          </div>
+
+          <div class="filter-block">
+            <span class="filter-title">Altura asiento</span>
+            <div class="range-grid">
+              <label>
+                <span>Mín.</span>
+                <input id="minSeatInput" type="number" min="0" step="5" placeholder="760" />
+              </label>
+              <label>
+                <span>Máx.</span>
+                <input id="maxSeatInput" type="number" min="0" step="5" placeholder="890" />
+              </label>
+            </div>
+          </div>
+
+          <div class="filter-block">
+            <span class="filter-title">Body type</span>
+            <div id="bodyFilters" class="pill-list"></div>
+          </div>
+
+          <div class="filter-block">
+            <span class="filter-title">Motor</span>
+            <div id="engineFilters" class="pill-list"></div>
+          </div>
+        </aside>
+
+        <section class="results-area">
+          <div class="results-toolbar">
+            <div>
+              <p class="eyebrow">Recomendaciones</p>
+              <h2 id="resultsCount">0 motos</h2>
+            </div>
+            <div id="activeFilters" class="active-filters" aria-live="polite"></div>
+          </div>
+          <div id="motorcycleList" class="motorcycle-list"></div>
+          <p id="emptyState" class="empty-state" hidden>No hay motos que encajen con esos filtros.</p>
+        </section>
+      </section>
+    </main>
+
+    <dialog id="settingsDialog">
+      <form method="dialog" class="settings-form">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Datos</p>
+            <h2>Conexión Supabase</h2>
+          </div>
+          <button class="icon-button" value="close" type="submit" aria-label="Cerrar">×</button>
+        </div>
+        <p class="muted">Guarda las credenciales públicas del proyecto. La tabla esperada se llama <code>motorcycles</code>, pero puedes cambiarla.</p>
+        <label class="field">
+          <span>Supabase URL</span>
+          <input id="supabaseUrlInput" type="url" placeholder="https://xxxx.supabase.co" />
+        </label>
+        <label class="field">
+          <span>Anon public key</span>
+          <input id="supabaseKeyInput" type="password" placeholder="eyJ..." />
+        </label>
+        <label class="field">
+          <span>Tabla</span>
+          <input id="supabaseTableInput" type="text" value="motorcycles" />
+        </label>
+        <div class="dialog-actions">
+          <button id="useDemoDataBtn" class="secondary" type="button">Usar demo</button>
+          <button id="saveSettingsBtn" class="primary" type="button">Guardar y cargar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="./config.local.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
