@@ -1070,6 +1070,7 @@ function renderResults() {
   els.emptyState.hidden = recommended.length !== 0;
   els.motorcycleList.innerHTML = recommended.map(motoCard).join("");
   els.discardedList.innerHTML = discarded.map(discardedCard).join("");
+  bindImageFallbacks();
 }
 
 function motoCard(moto) {
@@ -1117,7 +1118,7 @@ function motoCard(moto) {
 function renderMotoImages(images, title, searchQuery) {
   if (images.length) {
     return `
-      <div class="photo-grid" aria-label="Fotos de ${escapeAttr(title)}">
+      <div class="photo-grid ${images.length === 1 ? "is-single" : ""}" aria-label="Fotos de ${escapeAttr(title)}" data-fallback-title="${escapeAttr(searchQuery || title)}">
         ${images.slice(0, 4).map((url) => `<img src="${escapeAttr(url)}" alt="${escapeAttr(title)}" loading="lazy" referrerpolicy="no-referrer" />`).join("")}
       </div>
     `;
@@ -1128,6 +1129,41 @@ function renderMotoImages(images, title, searchQuery) {
       <div class="photo-fallback">
         <span>${escapeHtml(searchQuery || title)}</span>
       </div>
+    </div>
+  `;
+}
+
+function bindImageFallbacks() {
+  document.querySelectorAll(".photo-grid[data-fallback-title]").forEach((grid) => {
+    const images = [...grid.querySelectorAll("img")];
+    const sync = () => syncImageGrid(grid);
+
+    images.forEach((img) => {
+      img.addEventListener("error", () => {
+        img.remove();
+        sync();
+      }, { once: true });
+
+      if (img.complete && img.naturalWidth === 0) {
+        img.remove();
+      }
+    });
+
+    sync();
+  });
+}
+
+function syncImageGrid(grid) {
+  const images = [...grid.querySelectorAll("img")];
+
+  grid.classList.toggle("is-single", images.length === 1);
+  grid.classList.toggle("is-empty", images.length === 0);
+
+  if (images.length) return;
+
+  grid.innerHTML = `
+    <div class="photo-fallback">
+      <span>${escapeHtml(grid.dataset.fallbackTitle || "Imagen no disponible")}</span>
     </div>
   `;
 }

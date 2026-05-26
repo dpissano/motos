@@ -496,6 +496,7 @@ input[type="range"] {
   gap: 4px;
   background: #dce3de;
   min-height: 240px;
+  overflow: hidden;
 }
 
 .photo-grid img {
@@ -503,10 +504,24 @@ input[type="range"] {
   height: 100%;
   object-fit: cover;
   display: block;
+  background: #dce3de;
 }
 
 .photo-grid img:first-child {
   grid-row: span 2;
+}
+
+.photo-grid.is-single {
+  grid-template-columns: 1fr;
+}
+
+.photo-grid.is-single img {
+  grid-column: 1 / -1;
+  grid-row: 1 / span 2;
+}
+
+.photo-grid.is-empty {
+  grid-template-columns: 1fr;
 }
 
 .photo-fallback {
