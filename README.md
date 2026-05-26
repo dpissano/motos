@@ -113,6 +113,32 @@ Helpers principales en `app.js`:
 - `normalizeCooling(cooling)`
 - `normalizeRidingPosition(riding_position)`
 
+## Imagenes de motos
+
+La app muestra imagenes si `motos` tiene alguno de estos campos:
+
+- `image_url`
+- `photo_url`
+- `main_image_url`
+- `main_photo_url`
+- `thumbnail_url`
+- `picture_url`
+- `hero_image_url`
+- `image_urls`
+- `photo_urls`
+- `images`
+- `photos`
+
+Los campos pueden ser una URL, un array, JSON o texto separado por `|`.
+
+Si guardas rutas de Supabase Storage, usa formato `bucket/ruta/archivo.jpg`; la app lo convierte a:
+
+```text
+https://TU-PROYECTO.supabase.co/storage/v1/object/public/bucket/ruta/archivo.jpg
+```
+
+`photo_search_query` se usa solo como texto de busqueda/placeholder, no como imagen real.
+
 ## GitHub Pages
 
 Si publicas la app como estatica, recuerda que cualquier clave puesta en cliente es visible. Usa una publishable/anon key y protege datos con RLS/policies de solo lectura.

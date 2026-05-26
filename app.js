@@ -1074,13 +1074,14 @@ function renderResults() {
 
 function motoCard(moto) {
   const title = `${moto.brand} ${moto.model}${moto.version ? ` ${moto.version}` : ""}`;
+  const images = getMotoImages(moto);
+  const photoSearchUrl = moto.photo_search_query
+    ? `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(moto.photo_search_query)}`
+    : "";
+
   return `
     <article class="motorcycle-card">
-      <div class="photo-grid compact-photo">
-        <div class="photo-fallback">
-          <span>${escapeHtml(moto.photo_search_query || title)}</span>
-        </div>
-      </div>
+      ${renderMotoImages(images, title, moto.photo_search_query)}
       <div class="motorcycle-content">
         <div class="card-title">
           <div>
@@ -1106,11 +1107,94 @@ function motoCard(moto) {
         </div>
         <div class="card-actions">
           ${moto.official_source_url ? `<a href="${escapeAttr(moto.official_source_url)}" target="_blank" rel="noreferrer">Fuente oficial</a>` : ""}
-          ${moto.photo_search_query ? `<span>Foto: ${escapeHtml(moto.photo_search_query)}</span>` : ""}
+          ${photoSearchUrl ? `<a href="${escapeAttr(photoSearchUrl)}" target="_blank" rel="noreferrer">Buscar fotos</a>` : ""}
         </div>
       </div>
     </article>
   `;
+}
+
+function renderMotoImages(images, title, searchQuery) {
+  if (images.length) {
+    return `
+      <div class="photo-grid" aria-label="Fotos de ${escapeAttr(title)}">
+        ${images.slice(0, 4).map((url) => `<img src="${escapeAttr(url)}" alt="${escapeAttr(title)}" loading="lazy" referrerpolicy="no-referrer" />`).join("")}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="photo-grid compact-photo">
+      <div class="photo-fallback">
+        <span>${escapeHtml(searchQuery || title)}</span>
+      </div>
+    </div>
+  `;
+}
+
+function getMotoImages(moto) {
+  const candidates = [
+    moto.image_urls,
+    moto.images,
+    moto.photos,
+    moto.photo_urls,
+    moto.image_url,
+    moto.photo_url,
+    moto.main_image_url,
+    moto.main_photo_url,
+    moto.thumbnail_url,
+    moto.picture_url,
+    moto.hero_image_url,
+    moto.image,
+    moto.photo
+  ];
+
+  return candidates
+    .flatMap(parseImageList)
+    .map(toPublicImageUrl)
+    .filter(Boolean)
+    .filter((url, index, urls) => urls.indexOf(url) === index);
+}
+
+function parseImageList(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.flatMap(parseImageList);
+  if (typeof value === "object") {
+    return [
+      value.url,
+      value.src,
+      value.publicUrl,
+      value.public_url,
+      value.path
+    ].filter(Boolean);
+  }
+  if (typeof value !== "string") return [];
+
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+  if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+    try {
+      return parseImageList(JSON.parse(trimmed));
+    } catch {
+      return [];
+    }
+  }
+  return trimmed.split(/[|,\n]/).map((item) => item.trim()).filter(Boolean);
+}
+
+function toPublicImageUrl(value) {
+  const url = String(value || "").trim();
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith("//")) return `https:${url}`;
+  if (url.startsWith("data:image/")) return url;
+
+  const settings = getSettings();
+  if (settings?.url && url.includes("/")) {
+    return `${settings.url.replace(/\/$/, "")}/storage/v1/object/public/${url.replace(/^\/+/, "")}`;
+  }
+
+  return "";
 }
 
 function discardedCard(moto) {
